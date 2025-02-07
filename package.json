@@ -1,5 +1,7 @@
 {
   "name": "@codecrafters/redis",
   "version": "1.0.0",
-  "dependencies": {}
+  "dependencies": {
+    "redis-parser": "^3.0.0"
+  }
 }
