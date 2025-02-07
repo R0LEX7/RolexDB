@@ -1,33 +1,48 @@
-[![progress-banner](https://backend.codecrafters.io/progress/redis/72191774-b43f-414e-b346-56f86e019791)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# 🚀 Custom Database using NodeJs
 
-This is a starting point for JavaScript solutions to the
-["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+This project is a lightweight Redis like Database built using Node.js and TCP sockets. It implements fundamental Redis commands, supports hash data structures, and lays the groundwork for data persistence and caching strategies like LRU.
 
-In this challenge, you'll build a toy Redis clone that's capable of handling
-basic commands like `PING`, `SET` and `GET`. Along the way we'll learn about
-event loops, the Redis protocol and more.
+## 🔥 Features
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+- ✅ **Key-Value Storage**: Supports `GET`, `SET`, `MGET`, `INCR`, and `DEL` commands.
+- ✅ **Hash Storage**: Implements `HSET`, `HGET`, `HGETALL`, and `HMGET`.
+- ✅ **Expiration & Persistence**: Includes `EXPIRE`, `TTL`, and plans for AOF/RDB-like persistence.
+- ✅ **Pattern Matching**: Supports the `KEYS` command for filtering stored keys.
+- ✅ **Memory Optimization**: Plans to integrate LRU caching for efficient memory management.
+- ✅ **Scalability & Performance**: Future improvements include multi-threading and data sharding.
 
-# Passing the first stage
+## ⚡ How It Works
 
-The entry point for your Redis implementation is in `app/main.js`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
+- Uses the `net` module to handle TCP connections.
+- Parses Redis protocol (RESP) and executes commands.
+- Stores data in an in-memory JavaScript object (`map`).
+- Plans for data persistence (`RDB/AOF`) and worker pools to enhance concurrency.
 
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
+## 🚀 Running the Server
+
+Start the server by running:
+
+```bash
+node server.js
 ```
 
-That's all!
+## 📡 Connecting via Redis CLI
 
-# Stage 2 & beyond
+You can interact with the server using the Redis CLI:
 
-Note: This section is for stages 2 and beyond.
+```bash
+redis-cli -p 6379
+```
 
-1. Ensure you have `node (21)` installed locally
-1. Run `./your_program.sh` to run your Redis server, which is implemented in
-   `app/main.js`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+## 📌 Future Enhancements
+
+- 🔄 **AOF & RDB Persistence**: Implement Append-Only File (AOF) and Snapshotting (RDB) for data durability.
+- 🏗 **LRU Cache**: Introduce Least Recently Used (LRU) cache eviction policy.
+- ⚡ **Concurrency & Multi-threading**: Utilize worker threads for improved performance.
+- 🌎 **Sharding & Replication**: Implement basic data partitioning and replication for better scalability.
+- 📈 **Monitoring & Logging**: Integrate logging and monitoring tools for enhanced observability.
+
+---
+
+🚀 Contributions & suggestions are always welcome!
+
