@@ -3,5 +3,16 @@
   "version": "1.0.0",
   "dependencies": {
     "redis-parser": "^3.0.0"
+  },
+  "scripts": {
+  "build": "tsc",
+  "start": "node dist/app/main.ts",
+  "dev": "ts-node app/main.ts"
+},
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "@types/redis-parser": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
   }
 }
