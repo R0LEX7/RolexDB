@@ -1,9 +1,11 @@
+import { IMap } from "../Interfaces/parser";
+
 export class ListNode {
   key : string |null;
-  value : string |null;
+  value : string |IMap | null
   prev :ListNode | null;
   next :ListNode | null;
-  constructor(key: string | null, value: string | null) {
+  constructor(key: string | null, value: string | null | IMap) {
     this.key = key;
     this.value = value;
     this.prev = null;

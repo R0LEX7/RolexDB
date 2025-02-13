@@ -1,10 +1,11 @@
+import { IMap } from "../Interfaces/parser";
 import { DoublyLinkedList, ListNode } from "./list";
 
-let MAX_SIZE = 20;
+let MAX_SIZE = 2;
 const cacheMap = new Map<string, ListNode>();
 const LRUList = new DoublyLinkedList();
 
-const setDataIntoCache = (key: string, value: string): void => {
+export const setDataIntoCache = (key: string, value: string | IMap): void => {
   if (cacheMap.has(key)) {
     let node = cacheMap.get(key) as ListNode;
     node.value = value;
@@ -19,12 +20,22 @@ const setDataIntoCache = (key: string, value: string): void => {
       if (lruNode?.key) cacheMap.delete(lruNode.key);
     }
   }
+  console.log("cached map -> ", cacheMap);
 };
 
-const getDataFromCache = (key: string): string | null | undefined => {
+export const getDataFromCache = ( key: string): string | null | undefined | IMap => {
+  console.log("cached map -> ", cacheMap);
   let node = cacheMap.get(key) as ListNode;
-  if (!node) return null;
+  if (!node) {
+    return null;
+  }
 
   LRUList.moveToFront(node);
   return node.value;
+};
+
+export const deleteFromCache = (key: string): void => {
+  let node = cacheMap.get(key);
+  cacheMap.delete(key);
+  if (node) LRUList.removeNode(node);
 };

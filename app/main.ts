@@ -9,4 +9,8 @@ const server = net.createServer((connection : net.Socket) => {
   })
 });
 
-server.listen(6379, "127.0.0.1");
+server.listen(6379, "127.0.0.1" , () => {
+console.log('====================================');
+console.log("connected to rolexDB");
+console.log('====================================');
+})

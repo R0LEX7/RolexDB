@@ -6,7 +6,7 @@
   },
   "scripts": {
   "build": "tsc",
-  "start": "node dist/app/main.ts",
+  "start": "nodemon app/main.ts",
   "dev": "ts-node app/main.ts"
 },
   "devDependencies": {
