@@ -1,9 +1,13 @@
 import Parser from "redis-parser";
 import net from "net";
 import { ICommands, IMap } from "./Interfaces/parser";
-import { deleteFromCache, getDataFromCache, setDataIntoCache } from "./LRU/main";
+import {
+  deleteFromCache,
+  getDataFromCache,
+  setDataIntoCache,
+} from "./LRU/main";
 
-const map: IMap = {};
+export const map: Map<string, IMap> = new Map();
 
 const commands: ICommands = {
   GET: "get",
@@ -37,13 +41,14 @@ export const redisParser = (data: Buffer, connection: net.Socket) => {
             console.log("getting from cache");
             connection.write(parseBulkString(cachedValue));
           } else {
-            let val: string = map[key] as string;
+            let val: IMap = map.get(key) as IMap;
 
             console.log("not available in cache");
             if (!val) connection.write(parseNullBulkString());
             else {
               setDataIntoCache(key, val);
-              connection.write(parseBulkString(val));
+              if (typeof val === "string")
+                connection.write(parseBulkString(val));
             }
           }
           break;
@@ -51,34 +56,31 @@ export const redisParser = (data: Buffer, connection: net.Socket) => {
         case "set":
           let value: string = reply[2];
           setDataIntoCache(key, value);
-          map[key] = value;
+          map.set(key, { value });
           connection.write("+OK\r\n");
           break;
 
         case "mget":
           res = `*${reply.length - 1}\r\n`;
           for (let i = 1; i < reply.length; i++) {
-            cachedValue = getDataFromCache(key);
+            let cachedValue = getDataFromCache(reply[i]) || map.get(reply[i]);
             if (typeof cachedValue === "string") {
               res += parseBulkString(cachedValue);
-            } else {
-              let val: string = map[reply[i]] as string;
-              if (!val) res += parseNullBulkString();
-              else res += parseBulkString(val);
-            }
+            } else res += parseNullBulkString;
           }
           connection.write(res);
           break;
 
         case "incr":
-          if (Object.prototype.hasOwnProperty.call(map, reply[1])) {
-            let cachedNum = Number(getDataFromCache(key));
-            if(typeof cachedNum === "number"){
-              setDataIntoCache(key ,String(cachedNum+1))
+          if (map.has(reply[1])) {
+            let cachedNum =
+              Number(getDataFromCache(key)) || Number(map.get(key)) + 1;
+            if (typeof cachedNum === "number") {
+              setDataIntoCache(key, String(cachedNum + 1));
+              map.set(key, { value: String(cachedNum + 1) });
             }
-            map[key] = (Number(map[key]) + 1).toString();
-          } else map[key] = "1";
-          connection.write(parseInteger(Number(map[key])));
+          } else map.set(key, { value: "1" });
+          connection.write(parseInteger(Number(map.get(key))));
           break;
 
         case commands.KEYS:
@@ -89,7 +91,8 @@ export const redisParser = (data: Buffer, connection: net.Socket) => {
 
           keysArray.forEach((k) => {
             cachedValue = getDataFromCache(k);
-            if (typeof cachedValue === "string")  res += parseBulkString(cachedValue);
+            if (typeof cachedValue === "string")
+              res += parseBulkString(cachedValue);
             else res += parseBulkString(k);
           });
           if (res == `*${keysArray.length}\r\n`) res = parseNullBulkString();
@@ -100,7 +103,7 @@ export const redisParser = (data: Buffer, connection: net.Socket) => {
           res = 0;
 
           for (let i = 1; i < reply.length; i++) {
-            if (Object.prototype.hasOwnProperty.call(map, reply[i])) res++;
+            if (map.has(reply[i])) res++;
           }
 
           connection.write(parseInteger(res));
@@ -110,7 +113,7 @@ export const redisParser = (data: Buffer, connection: net.Socket) => {
           const exLimit: number = Number(reply[3]);
           setTimeout(() => {
             deleteFromCache(key);
-            delete map[key];
+            map.delete(key);
           }, exLimit);
 
           connection.write(parseInteger(1));
@@ -119,8 +122,8 @@ export const redisParser = (data: Buffer, connection: net.Socket) => {
         case commands.DEL:
           res = 0;
           for (let i = 1; i < reply.length; i++) {
-            if (Object.prototype.hasOwnProperty.call(map, reply[i])) {
-              delete map[reply[i]];
+            if (map.has(reply[i])) {
+              map.delete(reply[i]);
               deleteFromCache(key);
               res++;
             }
@@ -135,34 +138,36 @@ export const redisParser = (data: Buffer, connection: net.Socket) => {
             temp[reply[i]] = reply[i + 1];
             res++;
           }
-          map[reply[1]] = temp;
-          setDataIntoCache(key , temp)
+          map.set(reply[1], { value: temp });
+          setDataIntoCache(key, temp);
           connection.write(parseInteger(res));
           break;
 
-          case commands.HGET:
-            if (Object.prototype.hasOwnProperty.call(map, key)) {
-              let hashMap: IMap = getDataFromCache(key) as IMap || map[key] as IMap;
-              let mapVal: string = hashMap[reply[2]] as string;
+        case commands.HGET:
+          if (map.has(key)) {
+            let hashMap: IMap =
+              (getDataFromCache(key) as IMap) || (map.get(key) as IMap);
+            let mapVal: string = hashMap[reply[2]] as string;
 
-              if (!mapVal) {
-                connection.write(parseNullBulkString());
-              } else {
-                connection.write(parseBulkString(mapVal));
-              }
-            } else {
-              console.log("Key does not exist");
+            if (!mapVal) {
               connection.write(parseNullBulkString());
+            } else {
+              connection.write(parseBulkString(mapVal));
             }
-            break;
+          } else {
+            console.log("Key does not exist");
+            connection.write(parseNullBulkString());
+          }
+          break;
 
         case commands.HGETALL:
-          if (!Object.prototype.hasOwnProperty.call(map, key)) {
+          if (!map.has(key)) {
             connection.write("*0\r\n");
             break;
           }
 
-          const hash: IMap = getDataFromCache(key) as IMap || map[key] as IMap;
+          const hash: IMap =
+            (getDataFromCache(key) as IMap) || (map.get(key) as IMap);
           let keys = Object.keys(hash);
           res = `*${keys.length * 2}\r\n`;
 
@@ -175,11 +180,12 @@ export const redisParser = (data: Buffer, connection: net.Socket) => {
           break;
 
         case commands.HMGET:
-          if (!Object.prototype.hasOwnProperty.call(map, key)) {
+          if (!map.has(key)) {
             connection.write("*0\r\n");
             break;
           }
-          let hashMap: IMap = getDataFromCache(key) as IMap || map[key] as IMap;
+          let hashMap: IMap =
+            (getDataFromCache(key) as IMap) || (map.get(key) as IMap);
 
           res = `*${reply.length - 2}\r\n`;
           for (let i = 2; i < reply.length; i++) {

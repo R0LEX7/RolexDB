@@ -2,7 +2,7 @@ import { IMap } from "../Interfaces/parser";
 import { DoublyLinkedList, ListNode } from "./list";
 
 let MAX_SIZE = 2;
-const cacheMap = new Map<string, ListNode>();
+export const cacheMap = new Map<string, ListNode>();
 const LRUList = new DoublyLinkedList();
 
 export const setDataIntoCache = (key: string, value: string | IMap): void => {

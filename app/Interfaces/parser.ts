@@ -17,5 +17,5 @@ export interface ICommands {
 }
 
 export interface IMap {
-    [key: string]: string | IMap;
+    [key: string]: string | IMap; // Ensure it allows string values
   }
